@@ -13,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"], //mới sửa
+    origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"],
     credentials: true,
   })
 );
@@ -77,22 +77,14 @@ app.use((req, res, next) => {
 
 app.use("/api", router);
 
-// =================================================================
-// === BỘ NÃO SOCKET.IO PHIÊN BẢN HOÀN CHỈNH NHẤT ===
-// =================================================================
-
+// Socket.io logic giữ nguyên
 const onlineStaff = new Map();
 const waitingUsers = new Map();
 
-// Hàm loa phường: Báo cho tất cả admin biết danh sách khách đang chờ
 const broadcastWaitingList = () => {
   const staffSockets = Array.from(onlineStaff.values()).map((s) => s.socketId);
   if (staffSockets.length > 0) {
-    // SỬA Ở ĐÂY: Gửi đi cả một mảng object user, chứ không phải chỉ số lượng
-    io.to(staffSockets).emit(
-      "update_waiting_list",
-      Array.from(waitingUsers.values())
-    );
+    io.to(staffSockets).emit("update_waiting_list", Array.from(waitingUsers.values()));
   }
 };
 
@@ -101,26 +93,18 @@ io.on("connection", (socket) => {
 
   socket.on("staff_join", (staffInfo) => {
     console.log(`Nhân viên ${staffInfo.name} (ID: ${socket.id}) vừa online.`);
-    onlineStaff.set(socket.id, {
-      ...staffInfo,
-      status: "available",
-      socketId: socket.id,
-    });
-    // Gửi danh sách khách chờ ngay khi admin online
+    onlineStaff.set(socket.id, { ...staffInfo, status: "available", socketId: socket.id });
     socket.emit("update_waiting_list", Array.from(waitingUsers.values()));
   });
 
   socket.on("user_request_support", (userInfo) => {
     console.log(`User ${userInfo.name} (ID: ${socket.id}) cần hỗ trợ.`);
-    // Thêm socketId vào userInfo để định danh
     waitingUsers.set(socket.id, { ...userInfo, socketId: socket.id });
     broadcastWaitingList();
   });
 
   socket.on("staff_accept_chat", ({ room, customerId }) => {
-    console.log(
-      `Nhân viên ${socket.id} đã chấp nhận chat với khách ${customerId}`
-    );
+    console.log(`Nhân viên ${socket.id} đã chấp nhận chat với khách ${customerId}`);
     socket.join(room);
     waitingUsers.delete(customerId);
     broadcastWaitingList();
@@ -136,16 +120,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("chat_message", ({ room, sender, message }) => {
-    // Thêm customerId để frontend admin biết tin nhắn này của ai
     const customerId = room.replace("support_room_", "");
     io.to(room).emit("new_message", { sender, message, customerId });
   });
 
   socket.on("disconnect", () => {
     console.log("🔥 Người dùng ngắt kết nối:", socket.id);
-    if (onlineStaff.has(socket.id)) {
-      onlineStaff.delete(socket.id);
-    }
+    if (onlineStaff.has(socket.id)) onlineStaff.delete(socket.id);
     if (waitingUsers.has(socket.id)) {
       waitingUsers.delete(socket.id);
       broadcastWaitingList();
@@ -153,10 +134,16 @@ io.on("connection", (socket) => {
   });
 });
 
+// Sửa phần listen server
 const PORT = process.env.PORT || 8080;
-connectDB().then(() => {
-  server.listen(PORT, () => {
-    console.log("Kết nối MongoDB thành công");
-    console.log(`Server đang chạy tại http://localhost:${PORT}`);
+connectDB()
+  .then(() => {
+    server.listen(PORT, '0.0.0.0', () => {  // Bind tất cả interface
+      console.log("Kết nối MongoDB thành công");
+      console.log(`Server đang chạy tại port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Lỗi kết nối MongoDB:", error.message);  // Log lỗi DB
+    process.exit(1);  // Thoát nếu DB fail, tránh server crash ngầm
   });
-});
