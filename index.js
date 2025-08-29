@@ -11,17 +11,12 @@ const passport = require("./config/passport");
 
 const app = express();
 
-const allowedOrigins = process.env.FRONTEND_URL.split(",");
-
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"], //mới sửa
     credentials: true,
   })
 );
-
-
-
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
@@ -69,7 +64,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   },
 });
