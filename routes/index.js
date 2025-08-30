@@ -59,11 +59,11 @@ const getBotResponse = require("../controllers/chatbot/getBotResponse");
 
 // ========== Google OAuth ==========
 router.get(
-  "/api/auth/google",
+  "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 router.get(
-  "/api/auth/google/callback",
+  "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   userGoogleLogin
 );
