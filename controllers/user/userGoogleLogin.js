@@ -16,6 +16,7 @@ const userGoogleLogin = async (req, res) => {
     res.cookie("token", token, tokenOption);
 
     // redirect về FE (không cần gắn token vào query string)
+    const redirectPath = req.query.state || "login";
     res.redirect(`${process.env.FRONTEND_URL}/${redirectPath}?token=${req.user.token}`);
   } catch (err) {
     console.error("Google Login Error:", err);
