@@ -11,7 +11,7 @@ const passport = require("./config/passport");
 
 const app = express();
 
-// CORS
+// ================== CORS ==================
 app.use(
   cors({
     origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"],
@@ -32,8 +32,41 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Gắn io vào req
+// ================== Google OAuth ==================
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  (req, res) => {
+    const { token } = req.user;
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+    res.redirect(process.env.FRONTEND_URL);
+  }
+);
+
+app.get("/auth/login/success", (req, res) => {
+  if (req.user) {
+    res.json({
+      success: true,
+      user: req.user.user,
+      token: req.user.token,
+    });
+  } else {
+    res.json({ success: false });
+  }
+});
+
+// ================== HTTP & Socket.IO ==================
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
     origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"],
@@ -42,6 +75,7 @@ const io = new Server(server, {
   },
 });
 
+// Gắn io vào req để API sử dụng được socket
 app.use((req, res, next) => {
   req.io = io;
   next();
@@ -57,7 +91,10 @@ const waitingUsers = new Map();
 const broadcastWaitingList = () => {
   const staffSockets = Array.from(onlineStaff.values()).map((s) => s.socketId);
   if (staffSockets.length > 0) {
-    io.to(staffSockets).emit("update_waiting_list", Array.from(waitingUsers.values()));
+    io.to(staffSockets).emit(
+      "update_waiting_list",
+      Array.from(waitingUsers.values())
+    );
   }
 };
 
@@ -65,19 +102,23 @@ io.on("connection", (socket) => {
   console.log("🔌 Một người dùng vừa kết nối:", socket.id);
 
   socket.on("staff_join", (staffInfo) => {
-    console.log(`Nhân viên ${staffInfo.name} (ID: ${socket.id}) vừa online.`);
-    onlineStaff.set(socket.id, { ...staffInfo, status: "available", socketId: socket.id });
+    console.log(`👨‍💼 Nhân viên ${staffInfo.name} (ID: ${socket.id}) vừa online.`);
+    onlineStaff.set(socket.id, {
+      ...staffInfo,
+      status: "available",
+      socketId: socket.id,
+    });
     socket.emit("update_waiting_list", Array.from(waitingUsers.values()));
   });
 
   socket.on("user_request_support", (userInfo) => {
-    console.log(`User ${userInfo.name} (ID: ${socket.id}) cần hỗ trợ.`);
+    console.log(`🙋 User ${userInfo.name} (ID: ${socket.id}) cần hỗ trợ.`);
     waitingUsers.set(socket.id, { ...userInfo, socketId: socket.id });
     broadcastWaitingList();
   });
 
   socket.on("staff_accept_chat", ({ room, customerId }) => {
-    console.log(`Nhân viên ${socket.id} đã chấp nhận chat với khách ${customerId}`);
+    console.log(`✅ Nhân viên ${socket.id} đã chấp nhận chat với khách ${customerId}`);
     socket.join(room);
     waitingUsers.delete(customerId);
     broadcastWaitingList();
