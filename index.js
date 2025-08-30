@@ -52,7 +52,7 @@ app.get(
   }
 );
 
-app.get("/auth/login/success", (req, res) => {
+app.get("/api/auth/login/success", (req, res) => {
   if (req.user) {
     res.json({
       success: true,
