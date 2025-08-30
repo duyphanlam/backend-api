@@ -59,11 +59,11 @@ const getBotResponse = require("../controllers/chatbot/getBotResponse");
 
 // ========== Google OAuth ==========
 router.get(
-  "/auth/google",
+  "/api/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 router.get(
-  "/auth/google/callback",
+  "/api/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   userGoogleLogin
 );
@@ -85,7 +85,7 @@ router.get("/auth/login/success", (req, res) => {
 router.get("/auth/logout", (req, res) => {
   req.logout(() => {
     res.clearCookie("token");
-    res.redirect(`${process.env.FRONTEND_URL}/login`);
+    res.redirect(`${process.env.FRONTEND_URL}/api/login`);
   });
 });
 
