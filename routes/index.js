@@ -68,6 +68,27 @@ router.get(
   userGoogleLogin
 );
 
+// Login Success cho FE gọi
+router.get("/auth/login/success", (req, res) => {
+  if (req.user) {
+    return res.json({
+      success: true,
+      user: req.user.user,   // user từ passport
+      token: req.user.token, // token JWT
+    });
+  } else {
+    return res.json({ success: false });
+  }
+});
+
+// Google Logout
+router.get("/auth/logout", (req, res) => {
+  req.logout(() => {
+    res.clearCookie("token");
+    res.redirect(`${process.env.FRONTEND_URL}/login`);
+  });
+});
+
 // ========== Auth ==========
 router.post("/signup", userSignUpController);
 router.post("/signin", userSignInController);

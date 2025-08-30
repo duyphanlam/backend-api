@@ -1,4 +1,6 @@
 const forgotPasswordTemplate = ({ name, otp }) => {
+  const displayName = name || "Khách hàng";
+  const displayOtp = otp || "XXXXXX";
   return `
 <div>
   <p>Dear, ${name}</p>

@@ -1,20 +1,17 @@
-require("dotenv").config(); // <-- PHẢI ở ngay dòng đầu
+require("dotenv").config();
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 
-// (tuỳ chọn) debug nhanh, chạy xong nhớ xoá:
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.error(
-    " GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET chưa được load từ .env"
-  );
+  console.error("❌ GOOGLE_CLIENT_ID/SECRET chưa được load từ .env");
 }
 
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID, // KHÔNG được undefined
+      clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
     },
@@ -28,18 +25,14 @@ passport.use(
             name: profile.displayName,
             email,
             profilePic: profile.photos?.[0]?.value || "",
-            password: "",
+            googleId: profile.id,
+            password: null,
             role: "GENERAL",
           });
         }
 
         const token = jwt.sign(
-          {
-            _id: user._id,
-            email: user.email,
-            role: user.role,
-            name: user.name,
-          },
+          { id: user._id, email: user.email, role: user.role },
           process.env.TOKEN_SECRET_KEY,
           { expiresIn: "7d" }
         );

@@ -16,6 +16,10 @@ const verifyForgotPasswordOtp = async (req, res) => {
         .json({ message: "OTP không hợp lệ hoặc đã hết hạn." });
     }
 
+    user.forgot_password_otp = null;
+    user.forgot_password_expiry = null;
+    await user.save();
+
     return res
       .status(200)
       .json({ success: true, message: "Xác thực OTP thành công." });

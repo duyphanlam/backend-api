@@ -11,6 +11,7 @@ const passport = require("./config/passport");
 
 const app = express();
 
+// CORS
 app.use(
   cors({
     origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"],
@@ -31,37 +32,8 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
-    const { token } = req.user;
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
-    res.redirect(process.env.FRONTEND_URL);
-  }
-);
-app.get("/auth/login/success", (req, res) => {
-  if (req.user) {
-    res.json({
-      success: true,
-      user: req.user.user,
-      token: req.user.token,
-    });
-  } else {
-    res.json({ success: false });
-  }
-});
-
+// Gắn io vào req
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
     origin: [process.env.FRONTEND_URL, "https://linklap.com.vn"],
@@ -75,9 +47,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// ================== API Routes ==================
 app.use("/api", router);
 
-// Socket.io logic giữ nguyên
+// ================== Socket.io Logic ==================
 const onlineStaff = new Map();
 const waitingUsers = new Map();
 
@@ -134,16 +107,16 @@ io.on("connection", (socket) => {
   });
 });
 
-// Sửa phần listen server
+// ================== Run server ==================
 const PORT = process.env.PORT || 8080;
 connectDB()
   .then(() => {
-    server.listen(PORT, '0.0.0.0', () => {  // Bind tất cả interface
-      console.log("Kết nối MongoDB thành công");
-      console.log(`Server đang chạy tại port ${PORT}`);
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log("✅ Kết nối MongoDB thành công");
+      console.log(`🚀 Server đang chạy tại port ${PORT}`);
     });
   })
   .catch((error) => {
-    console.error("Lỗi kết nối MongoDB:", error.message);  // Log lỗi DB
-    process.exit(1);  // Thoát nếu DB fail, tránh server crash ngầm
+    console.error("❌ Lỗi kết nối MongoDB:", error.message);
+    process.exit(1);
   });
