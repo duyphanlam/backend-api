@@ -34,12 +34,12 @@ app.use(passport.session());
 
 // ================== Google OAuth ==================
 app.get(
-  "/auth/google",
+  "/api/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 app.get(
-  "/auth/google/callback",
+  "/api/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
     const { token } = req.user;
@@ -52,7 +52,7 @@ app.get(
   }
 );
 
-app.get("/auth/login/success", (req, res) => {
+app.get("/api/auth/login/success", (req, res) => {
   if (req.user) {
     res.json({
       success: true,
