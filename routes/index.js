@@ -69,7 +69,7 @@ router.get(
 );
 
 // Login Success cho FE gọi
-router.get("/api/auth/login/success", (req, res) => {
+router.get("/auth/login/success", (req, res) => {
   if (req.user) {
     return res.json({
       success: true,
