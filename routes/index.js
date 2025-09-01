@@ -47,45 +47,41 @@ const {
 const verifySignupOtpController = require("../controllers/user/verifySignupOtpController");
 const resendSignupOtpController = require("../controllers/user/resendSignupOtpController");
 const autoLoginAfterOtpController = require("../controllers/user/autoLoginAfterOtp");
-
+const passport = require("passport");
 const userGoogleLogin = require("../controllers/user/userGoogleLogin");
 
 // THÊM CONTROLLER CHO CHATBOT
 const getBotResponse = require("../controllers/chatbot/getBotResponse");
-const passport = require("passport");
 
 // ========== Google OAuth ==========
 router.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
-// Callback sau khi Google xác thực
 router.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login", session: true }),
-  (req, res) => {
-    // Redirect về FE login success page
-    res.redirect(`${process.env.FRONTEND_URL}/login/success`);
-  }
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  userGoogleLogin
 );
 
-// API để FE lấy user sau khi login
-router.get("/auth/login/success", (req, res) => {
+// Login Success cho FE gọi
+router.get("/api/auth/login/success", (req, res) => {
   if (req.user) {
     return res.json({
       success: true,
-      user: req.user, // req.user chính là user từ serializeUser
+      user: req.user.user,   // user từ passport
+      token: req.user.token, // token JWT
     });
   } else {
-    return res.json({ success: false, message: "Chưa đăng nhập" });
+    return res.json({ success: false });
   }
 });
 
 // Google Logout
 router.get("/auth/logout", (req, res) => {
   req.logout(() => {
-    res.clearCookie("connect.sid"); // nếu dùng express-session
-    res.redirect(`${process.env.FRONTEND_URL}/login`);
+    res.clearCookie("token");
+    res.redirect(`${process.env.FRONTEND_URL}/api/login`);
   });
 });
 
