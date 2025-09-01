@@ -31,7 +31,7 @@ async function verifySignupOtpController(req, res) {
     }
 
     // ✅ SỬA: Sử dụng signup_otp thay vì otp
-    if (user.signup_otp !== Number(otp)) {
+    if (String(user.signup_otp) !== String(otp)) {
       return res.status(400).json({
         success: false,
         error: true,
@@ -50,8 +50,8 @@ async function verifySignupOtpController(req, res) {
 
     // Xác thực thành công
     user.isVerified = true;
-    user.signup_otp = null;              // ✅ SỬA: Sử dụng signup_otp
-    user.signup_otp_expiry = null;       // ✅ SỬA: Sử dụng signup_otp_expiry
+    user.signup_otp = null; // ✅ SỬA: Sử dụng signup_otp
+    user.signup_otp_expiry = null; // ✅ SỬA: Sử dụng signup_otp_expiry
     await user.save();
 
     return res.json({
@@ -63,8 +63,8 @@ async function verifySignupOtpController(req, res) {
         name: user.name,
         email: user.email,
         role: user.role,
-        isVerified: user.isVerified
-      }
+        isVerified: user.isVerified,
+      },
     });
   } catch (err) {
     res.json({

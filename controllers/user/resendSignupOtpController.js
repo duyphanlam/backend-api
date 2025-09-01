@@ -32,7 +32,7 @@ async function resendSignupOtpController(req, res) {
     }
 
     // Sinh OTP mới
-    const newOtp = Math.floor(100000 + Math.random() * 900000);
+    const newOtp = String(Math.floor(100000 + Math.random() * 900000));
     const newOtpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
 
     // Cập nhật OTP mới vào database
@@ -70,4 +70,4 @@ async function resendSignupOtpController(req, res) {
   }
 }
 
-module.exports = { resendSignupOtpController };
+module.exports = resendSignupOtpController;
