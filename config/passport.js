@@ -1,7 +1,6 @@
 require("dotenv").config();
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -31,13 +30,8 @@ passport.use(
           });
         }
 
-        const token = jwt.sign(
-          { id: user._id, email: user.email, role: user.role },
-          process.env.TOKEN_SECRET_KEY,
-          { expiresIn: "7d" }
-        );
-
-        return done(null, { user, token });
+        // ✅ Trả về user (không cần token ở đây, vì bạn dùng session)
+        return done(null, user);
       } catch (err) {
         return done(err, null);
       }
@@ -45,7 +39,17 @@ passport.use(
   )
 );
 
-passport.serializeUser((obj, done) => done(null, obj));
-passport.deserializeUser((obj, done) => done(null, obj));
+passport.serializeUser((user, done) => {
+  done(null, user._id); // lưu _id vào session
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id).select("-password");
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
 
 module.exports = passport;

@@ -44,8 +44,12 @@ const {
   sendOtpToAllUsers,
   sendOtpToOneUser,
 } = require("../controllers/authController");
-const verifySignupOtpController = require("../controllers/user/verifySignupOtpController");
-const resendSignupOtpController = require("../controllers/user/resendSignupOtpController");
+const {
+  verifySignupOtpController,
+} = require("../controllers/user/verifySignupOtpController");
+const {
+  resendSignupOtpController,
+} = require("../controllers/user/resendSignupOtpController");
 const autoLoginAfterOtpController = require("../controllers/user/autoLoginAfterOtp");
 const passport = require("passport");
 const userGoogleLogin = require("../controllers/user/userGoogleLogin");
@@ -58,30 +62,33 @@ router.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
+// Callback sau khi Google xác thực
 router.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  userGoogleLogin
+  passport.authenticate("google", { failureRedirect: "/login", session: true }),
+  (req, res) => {
+    // Redirect về FE login success page
+    res.redirect(`${process.env.FRONTEND_URL}/login/success`);
+  }
 );
 
-// Login Success cho FE gọi
-router.get("/api/auth/login/success", (req, res) => {
+// API để FE lấy user sau khi login
+router.get("/auth/login/success", (req, res) => {
   if (req.user) {
     return res.json({
       success: true,
-      user: req.user.user,   // user từ passport
-      token: req.user.token, // token JWT
+      user: req.user, // req.user chính là user từ serializeUser
     });
   } else {
-    return res.json({ success: false });
+    return res.json({ success: false, message: "Chưa đăng nhập" });
   }
 });
 
 // Google Logout
 router.get("/auth/logout", (req, res) => {
   req.logout(() => {
-    res.clearCookie("token");
-    res.redirect(`${process.env.FRONTEND_URL}/api/login`);
+    res.clearCookie("connect.sid"); // nếu dùng express-session
+    res.redirect(`${process.env.FRONTEND_URL}/login`);
   });
 });
 
