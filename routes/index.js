@@ -44,18 +44,15 @@ const {
   sendOtpToAllUsers,
   sendOtpToOneUser,
 } = require("../controllers/authController");
-const {
-  verifySignupOtpController,
-} = require("../controllers/user/verifySignupOtpController");
-const {
-  resendSignupOtpController,
-} = require("../controllers/user/resendSignupOtpController");
+const verifySignupOtpController = require("../controllers/user/verifySignupOtpController");
+const resendSignupOtpController = require("../controllers/user/resendSignupOtpController");
 const autoLoginAfterOtpController = require("../controllers/user/autoLoginAfterOtp");
-const passport = require("passport");
+
 const userGoogleLogin = require("../controllers/user/userGoogleLogin");
 
 // THÊM CONTROLLER CHO CHATBOT
 const getBotResponse = require("../controllers/chatbot/getBotResponse");
+const passport = require("passport");
 
 // ========== Google OAuth ==========
 router.get(
