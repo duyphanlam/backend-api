@@ -30,14 +30,14 @@ const userSchema = new mongoose.Schema(
 // Thêm index cho email
 userSchema.index({ email: 1 }, { unique: true });
 
-// Hook mã hóa mật khẩu (nếu cần)
-userSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    const bcrypt = require('bcrypt');
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
+// // Hook mã hóa mật khẩu (nếu cần)
+// userSchema.pre('save', async function(next) {
+//   if (this.isModified('password')) {
+//     const bcrypt = require('bcrypt');
+//     this.password = await bcrypt.hash(this.password, 10);
+//   }
+//   next();
+// });
 
 const userModel = mongoose.model("user", userSchema);
 
