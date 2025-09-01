@@ -75,4 +75,4 @@ async function verifySignupOtpController(req, res) {
   }
 }
 
-module.exports = { verifySignupOtpController };
+module.exports = verifySignupOtpController ;
